@@ -1,0 +1,2 @@
+# FingerprintCollector
+Dump browser fingerprint
