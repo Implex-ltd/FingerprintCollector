@@ -3997,7 +3997,7 @@ window['__$dd'] = async () => {
     return dd;
 };
 
-function xorEncrypt(data, key) {
+function x12(data, key) {
     var result = '';
     for (var i = 0; i < data.length; i++) {
         var charCode = data.charCodeAt(i) ^ key.charCodeAt(i % key.length);
@@ -4008,11 +4008,7 @@ function xorEncrypt(data, key) {
 
 
 function enc(data) {
-    let cleartext = btoa(unescape(encodeURIComponent(data)))
-
-    let enc = xorEncrypt(cleartext, 'lmaonikoontopniggauwusogay')
-
-    return btoa(unescape(encodeURIComponent(enc)))
+    return btoa(unescape(encodeURIComponent(x12(btoa(unescape(encodeURIComponent(data))), new TextDecoder().decode(new Uint8Array([108, 109, 97, 111, 49, 53, 52, 54, 52, 110, 111, 116, 103, 111, 110, 110, 97, 103, 101, 116, 116, 104, 101, 107, 101, 121, 105, 102, 121, 101, 115, 121, 111, 117, 97, 114, 101, 97, 103, 111, 111, 100, 98, 111, 121]))))))
 }
 
 function postResult(data) {

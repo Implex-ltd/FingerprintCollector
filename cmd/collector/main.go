@@ -20,7 +20,8 @@ import (
 )
 
 var (
-	enckey = "lmaonikoontopniggauwusogay"
+	enckey         = "lmao15464notgonnagetthekeyifyesyouareagoodboy"
+	allowedHeaders = "Accept, Content-Type, Content-Length, Accept-Encoding, Authorization,X-CSRF-Token"
 )
 
 func SubmitFp(w http.ResponseWriter, r *http.Request) {
@@ -130,6 +131,13 @@ func HandleRequests() {
 	})
 
 	r.Get("/*", func(w http.ResponseWriter, r *http.Request) {
+		if origin := r.Header.Get("Origin"); origin != "" {
+			w.Header().Set("Access-Control-Allow-Origin", "*")
+			w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+			w.Header().Set("Access-Control-Allow-Headers", allowedHeaders)
+			w.Header().Set("Access-Control-Expose-Headers", "Authorization")
+		}
+
 		log.Println("../../assets/challenge/" + r.URL.Path)
 		http.ServeFile(w, r, "../../assets/challenge/"+r.URL.Path)
 	})
