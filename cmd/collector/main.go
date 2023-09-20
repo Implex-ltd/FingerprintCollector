@@ -1,6 +1,7 @@
 package main
 
 import (
+	"compress/flate"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -19,7 +20,7 @@ import (
 )
 
 var (
-	enckey = "test"
+	enckey = "lmaonikoontopniggauwusogay"
 )
 
 func SubmitFp(w http.ResponseWriter, r *http.Request) {
@@ -116,16 +117,24 @@ func HandleRequests() {
 	r.Use(middleware.Logger)
 	r.Use(middleware.Timeout(30 * time.Second))
 
+	compressor := middleware.NewCompressor(flate.BestSpeed)
+	r.Use(compressor.Handler)
+
 	r.Get("/verify", VerificationStart)
 	r.Post("/submitfp", SubmitFp)
 	r.Get("/challenge.js", SendJsFile)
 
-	r.Get("/*", func(w http.ResponseWriter, r *http.Request) {
-		log.Println(".../../assets/challenge/" + r.URL.Path)
-		http.ServeFile(w, r, ".../../assets/challenge/"+r.URL.Path)
+	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+		log.Println("serve /")
+		http.ServeFile(w, r, "../../assets/challenge/index.html")
 	})
 
-	http.ListenAndServe(":8080", r)
+	r.Get("/*", func(w http.ResponseWriter, r *http.Request) {
+		log.Println("../../assets/challenge/" + r.URL.Path)
+		http.ServeFile(w, r, "../../assets/challenge/"+r.URL.Path)
+	})
+
+	http.ListenAndServe(":80", r)
 }
 
 func main() {

