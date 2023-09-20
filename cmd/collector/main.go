@@ -30,59 +30,71 @@ func SubmitFp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	decryptAndHandle := func(encryptedData string) (interface{}, error) {
-		decrypted, err := fingerprint.Decrypt(encryptedData, enckey)
-		if err != nil {
-			return nil, err
-		}
-
-		var result interface{}
-		if err := json.Unmarshal([]byte(decrypted), &result); err != nil {
-			return nil, err
-		}
-
-		return result, nil
-	}
-
-	j_dec, err := decryptAndHandle(requestData.Data.J)
+	_, err := fingerprint.Decrypt(requestData.Data.N, enckey)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	fp, ok := j_dec.(map[string]interface{})
-	if !ok {
-		http.Error(w, "Invalid JSON data in J field", http.StatusBadRequest)
+	_, err = fingerprint.Decrypt(requestData.Data.F, enckey)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	fmt.Println(fp["VisitorID"])
+	_, err = fingerprint.Decrypt(requestData.Data.D, enckey)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
-	filter := bson.D{{"visitor_id", fp["VisitorID"]}}
+	decJ, err := fingerprint.Decrypt(requestData.Data.J, enckey)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	var j_dec interface{}
+
+	if err = json.Unmarshal([]byte(decJ), &j_dec); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	var fp Fpjs
+	if err = json.Unmarshal([]byte(decJ), &fp); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	fmt.Println(fp.VisitorID)
+
+	filter := bson.D{{"visitor_id", fp.VisitorID}}
 	existingDoc := visitcollection.FindOne(context.TODO(), filter)
 
 	if existingDoc.Err() == mongo.ErrNoDocuments {
 		insertResult, err := collection.InsertOne(context.TODO(), requestData)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
+			log.Fatal(err)
 		}
 
-		_, err = visitcollection.InsertOne(context.TODO(), bson.D{{"visitor_id", fp["VisitorID"]}})
+		_, err = visitcollection.InsertOne(context.TODO(), bson.D{{"visitor_id", fp.VisitorID}})
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
+			log.Fatal(err)
 		}
 
 		fmt.Printf("Inserted a document with ID: %v\n", insertResult.InsertedID)
 	} else if existingDoc.Err() != nil {
-		http.Error(w, existingDoc.Err().Error(), http.StatusInternalServerError)
-		return
+		log.Fatal(existingDoc.Err())
 	} else {
 		fmt.Println("Document with VisitorID already exists.")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("ok"))
+		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
+
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("ok"))
 }
