@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"log"
 	"net/http"
 	"time"
@@ -26,44 +25,51 @@ var (
 
 func SubmitFp(w http.ResponseWriter, r *http.Request) {
 	var requestData FpPayload
-
 	if err := json.NewDecoder(r.Body).Decode(&requestData); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("ok"))
 		return
 	}
 
-	userId, err := fingerprint.Decrypt(requestData.Data.ID, "broisatryharderlmao667")
+	userId, err := fingerprint.Decrypt(requestData.ID, "broisatryharderlmao667")
 	if err != nil {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("ok"))
+
+		log.Println(err)
 		return
 	}
 
-	_, err = fingerprint.Decrypt(requestData.Data.N, "1337superpasslmaohowcanyoubegaylikethat")
+	_, err = fingerprint.Decrypt(requestData.N, "1337superpasslmaohowcanyoubegaylikethat")
 	if err != nil {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("ok"))
+		log.Println(err)
 		return
 	}
-	
-	b, _ := io.ReadAll(r.Body)
 
-	fmt.Println(string(b))
-	fmt.Println(requestData)
 	fmt.Println(userId)
-	
+
 	existingDoc := visitcollection.FindOne(context.TODO(), bson.D{{"visitor_id", userId}})
 
 	if existingDoc.Err() == mongo.ErrNoDocuments {
 		insertResult, err := collection.InsertOne(context.TODO(), requestData)
 		if err != nil {
-			log.Fatal(err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
 
 		_, err = visitcollection.InsertOne(context.TODO(), bson.D{{"visitor_id", userId}})
 		if err != nil {
-			log.Fatal(err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
 
 		fmt.Printf("Inserted a document with ID: %v\n", insertResult.InsertedID)
 	} else if existingDoc.Err() != nil {
-		log.Fatal(existingDoc.Err())
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("ok"))
+		return
 	} else {
 		fmt.Println("Document with VisitorID already exists.")
 		w.WriteHeader(http.StatusOK)
@@ -74,7 +80,6 @@ func SubmitFp(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("ok"))
 }
-
 
 func SendJsFile(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, "../../assets/hsw.js")

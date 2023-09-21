@@ -1,6 +1,8 @@
 package fingerprint
 
-import "encoding/base64"
+import (
+	"encoding/base64"
+)
 
 /*
 - Encryption: Fp  -> b64 -> Xor  -> b64
@@ -19,12 +21,7 @@ func Decrypt(data, key string) (string, error) {
 		decryptedData[i] = decodedData[i] ^ keyBytes[i%len(keyBytes)]
 	}
 
-	decodedString, err := base64.StdEncoding.DecodeString(string(decryptedData))
-	if err != nil {
-		return "", err
-	}
-
-	return string(decodedString), nil
+	return string(decryptedData), nil
 }
 
 func Encrypt(data, key string) (string, error) {
