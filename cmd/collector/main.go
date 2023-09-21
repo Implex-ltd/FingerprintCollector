@@ -5,15 +5,15 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
+	"log"
+	"net/http"
+	"time"
+
 	"github.com/Implex-ltd/collector/internal/fingerprint"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"log"
-	"net/http"
-	"os"
-	"path/filepath"
-	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -32,47 +32,23 @@ func SubmitFp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err := fingerprint.Decrypt(requestData.Data.N, enckey)
+	userId, err := fingerprint.Decrypt(requestData.Data.ID, "broisatryharderlmao667")
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	_, err = fingerprint.Decrypt(requestData.Data.F, enckey)
+	_, err = fingerprint.Decrypt(requestData.Data.N, "1337superpasslmaohowcanyoubegaylikethat")
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	
+	b, _ := io.ReadAll(r.Body)
 
-	_, err = fingerprint.Decrypt(requestData.Data.D, enckey)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	decJ, err := fingerprint.Decrypt(requestData.Data.J, enckey)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	var j_dec interface{}
-
-	if err = json.Unmarshal([]byte(decJ), &j_dec); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	var fp Fpjs
-	if err = json.Unmarshal([]byte(decJ), &fp); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	fmt.Println(fp.VisitorID)
-
-	filter := bson.D{{"visitor_id", fp.VisitorID}}
-	existingDoc := visitcollection.FindOne(context.TODO(), filter)
+	fmt.Println(string(b))
+	fmt.Println(requestData)
+	fmt.Println(userId)
+	
+	existingDoc := visitcollection.FindOne(context.TODO(), bson.D{{"visitor_id", userId}})
 
 	if existingDoc.Err() == mongo.ErrNoDocuments {
 		insertResult, err := collection.InsertOne(context.TODO(), requestData)
@@ -80,7 +56,7 @@ func SubmitFp(w http.ResponseWriter, r *http.Request) {
 			log.Fatal(err)
 		}
 
-		_, err = visitcollection.InsertOne(context.TODO(), bson.D{{"visitor_id", fp.VisitorID}})
+		_, err = visitcollection.InsertOne(context.TODO(), bson.D{{"visitor_id", userId}})
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -95,21 +71,13 @@ func SubmitFp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("ok"))
 }
 
-func VerificationStart(w http.ResponseWriter, r *http.Request) {
-	http.ServeFile(w, r, ".../../assets/challenge/index.html")
-}
 
 func SendJsFile(w http.ResponseWriter, r *http.Request) {
-	workDir, _ := os.Getwd()
-	filesDir := filepath.Join(workDir, ".../../assets/challenge")
-
-	http.ServeFile(w, r, filepath.Join(filesDir, "challenge.js"))
+	http.ServeFile(w, r, "../../assets/hsw.js")
 }
 
 func HandleRequests() {
@@ -121,13 +89,12 @@ func HandleRequests() {
 	compressor := middleware.NewCompressor(flate.BestSpeed)
 	r.Use(compressor.Handler)
 
-	r.Get("/verify", VerificationStart)
-	r.Post("/submitfp", SubmitFp)
-	r.Get("/challenge.js", SendJsFile)
+	r.Post("/submit", SubmitFp)
+	r.Get("/hsw.js", SendJsFile)
 
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		log.Println("serve /")
-		http.ServeFile(w, r, "../../assets/challenge/index.html")
+		http.ServeFile(w, r, "../../assets/index.html")
 	})
 
 	r.Get("/*", func(w http.ResponseWriter, r *http.Request) {
@@ -138,8 +105,8 @@ func HandleRequests() {
 			w.Header().Set("Access-Control-Expose-Headers", "Authorization")
 		}
 
-		log.Println("../../assets/challenge/" + r.URL.Path)
-		http.ServeFile(w, r, "../../assets/challenge/"+r.URL.Path)
+		log.Println("../../assets/" + r.URL.Path)
+		http.ServeFile(w, r, "../../assets/"+r.URL.Path)
 	})
 
 	http.ListenAndServe(":80", r)

@@ -26,3 +26,17 @@ func Decrypt(data, key string) (string, error) {
 
 	return string(decodedString), nil
 }
+
+func Encrypt(data, key string) (string, error) {
+    dataBytes := []byte(data)
+    keyBytes := []byte(key)
+
+    encryptedData := make([]byte, len(dataBytes))
+
+    for i := 0; i < len(dataBytes); i++ {
+        encryptedData[i] = dataBytes[i] ^ keyBytes[i%len(keyBytes)]
+    }
+
+    encodedString := base64.StdEncoding.EncodeToString(encryptedData)
+    return encodedString, nil
+}

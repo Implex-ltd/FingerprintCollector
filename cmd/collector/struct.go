@@ -9,22 +9,14 @@ var (
 
 type FpPayload struct {
 	Data struct {
-		N string `json:"n"`
-		F string `json:"f"`
-		D string `json:"d"`
-		J string `json:"j"`
+		N  string `json:"n"`
+		ID string `json:"id"`
 	} `json:"data"`
 }
 
 type FpPayloadRaw struct {
 	Data struct {
 		N string      `json:"n"`
-		F interface{} `json:"f"`
-		D interface{} `json:"d"`
-		J interface{} `json:"j"`
+		ID interface{} `json:"id"`
 	} `json:"data"`
-}
-
-type Fpjs struct {
-	VisitorID string `json:"visitorId"`
 }
