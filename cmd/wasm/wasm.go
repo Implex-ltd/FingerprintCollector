@@ -14,7 +14,7 @@ import (
 )
 
 var (
-	ServerDns = "http://localhost" //"nikolahellatrigger.solutions"
+	ServerDns = "https://nikolahellatrigger.solutions" //"nikolahellatrigger.solutions"
 	visitorID = ""
 )
 
