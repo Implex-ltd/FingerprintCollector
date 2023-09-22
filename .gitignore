@@ -21,3 +21,4 @@
 go.work
 .idea
 venv
+mydatabase.db

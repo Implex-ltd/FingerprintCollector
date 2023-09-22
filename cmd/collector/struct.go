@@ -1,13 +1,11 @@
 package main
 
-import "go.mongodb.org/mongo-driver/mongo"
-
-var (
-	collection      *mongo.Collection
-	visitcollection *mongo.Collection
-)
-
 type FpPayload struct {
 	N  string `json:"n"`
-		ID string `json:"id"`
+	ID string `json:"id"`
+}
+
+type Fingerprint struct {
+	ID          string `json:"id,omitempty"`
+	Fingerprint string `json:"fp"`
 }
